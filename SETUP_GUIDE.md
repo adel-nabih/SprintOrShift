@@ -36,7 +36,8 @@ Assets/
 │   ├── DynamicMazeWall.cs         "don't look back" wall shifting
 │   └── GameManager.cs             spawn point, UI, level flow
 ├── Editor/
-│   └── SprintOrShiftLevelBuilder.cs   (optional) rebuilds both scenes from text layouts
+│   ├── SprintOrShiftLevelBuilder.cs   (optional) rebuilds both scenes from text layouts
+│   └── SubmissionTools.cs             (optional) captures submission screenshots, builds the macOS app
 ├── Scenes/      Level1.unity, Level2.unity
 ├── Materials/   Wall, Floor, DynamicWall, Portal, StartPad, SignPlate, Neon_*
 └── Settings/    URP assets + SprintOrShiftVolume (bloom, vignette)

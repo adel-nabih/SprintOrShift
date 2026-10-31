@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sprint or Shift: Game Design Document</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root { --ink:#1b1a2e; --muted:#5d5b78; --accent:#6a3fd1; --pink:#c63aa8; --cyan:#0f9fc0; --line:#dcdaea; --soft:#f4f3fa; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: var(--ink); font-size: 10.6pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 30pt; margin: 0 0 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 16pt; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--accent); break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14px 0 4px; color: var(--accent); break-after: avoid; }
+  p { margin: 5px 0 8px; }
+  ul, ol { margin: 4px 0 8px; padding-left: 20px; }
+  li { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 9.6pt; break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; vertical-align: top; text-align: left; }
+  th { background: var(--soft); }
+  figure { margin: 10px 0 14px; break-inside: avoid; }
+  figure img { width: 100%; border-radius: 6px; display: block; }
+  figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 4px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid2 figure { margin: 4px 0; }
+  .page { break-before: page; }
+  .cover { display: flex; flex-direction: column; gap: 6px; }
+  .cover .hero { width: 100%; border-radius: 10px; margin: 12px 0; }
+  .tag { display: inline-block; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin: 0 4px 4px 0; font-size: 9pt; }
+  .callout { background: var(--soft); border-left: 4px solid var(--accent); padding: 8px 12px; margin: 10px 0; border-radius: 0 6px 6px 0; break-inside: avoid; }
+  .warn { border-left-color: #d98b00; background: #fff7e6; }
+  .rule { display: grid; grid-template-columns: 34px 1fr; gap: 8px; margin: 8px 0; break-inside: avoid; }
+  .rule .n { background: var(--accent); color: white; font-weight: 700; border-radius: 6px; text-align: center; padding-top: 6px; font-size: 13pt; }
+  .done { color: #0d8a3a; font-weight: 700; }
+  .planned { color: #b36b00; font-weight: 700; }
+  .muted { color: var(--muted); }
+  code { font-family: Menlo, monospace; font-size: 8.8pt; background: var(--soft); padding: 0 3px; border-radius: 3px; }
+  .toc { columns: 2; column-gap: 24px; } .toc li { margin: 1px 0; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <div>
+    <p class="muted" style="margin:0">Game Design Document</p>
+    <h1>Sprint or Shift</h1>
+    <p style="font-size:13pt;margin:0">A first-person maze runner where you cannot stop, and the maze changes behind your back.</p>
+    <img class="hero" src="../Screenshots/01_level1_start.png" alt="Level 1 start">
+    <span class="tag">Genre: first-person maze / action-puzzle</span>
+    <span class="tag">Engine: Unity 6 (URP)</span>
+    <span class="tag">Platform: PC, keyboard + mouse (macOS build)</span>
+    <span class="tag">Session: 3–8 minutes</span>
+    <span class="tag">Audience: 12+, casual-to-core players</span>
+  </div>
+  <div>
+    <p><b>Team:</b> Adel Nabih, Maryam Sherif, Ali Eissa</p>
+    <p><b>Course:</b> Game Design<br><b>Instructor:</b> Dr. Arafa Taher<br><b>Date:</b> October 2026</p>
+    <p><b>Repository:</b> <a href="https://github.com/adel-nabih/SprintOrShift">github.com/adel-nabih/SprintOrShift</a></p>
+    <ol class="toc muted">
+      <li>Overview &amp; pillars</li><li>Core rules &amp; controls</li><li>Core loop</li><li>Mechanics in detail</li>
+      <li>Level design</li><li>Visual style &amp; feedback</li><li>MDA analysis</li><li>Design principles applied</li>
+      <li>Technical implementation</li><li>Playtesting &amp; iteration</li><li>Scope: implemented vs. planned</li><li>Credits</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================== 1 OVERVIEW ============================== -->
+<section class="page">
+<h2>1. Overview</h2>
+<p><b>Elevator pitch.</b> You are in a dark neon maze. If you stand still for two seconds, you are dragged back to the start. Every time you turn your back on a purple wall, the maze rearranges itself. You can't stop and you can't go back. You can only keep moving until you reach the glowing portal.</p>
+
+<h3>Design question the prototype tests</h3>
+<div class="callout">Can two simple restrictions, <b>"don't stop"</b> and <b>"don't look back"</b>, turn an ordinary maze into a tense experience where players must commit to their choices?</div>
+
+<h3>Design pillars</h3>
+<table>
+  <tr><th style="width:24%">Pillar</th><th>What it means for design decisions</th></tr>
+  <tr><td><b>Momentum over caution</b></td><td>Every rule rewards moving and punishes hesitating. There is no pause, no map and no slow "careful" option.</td></tr>
+  <tr><td><b>The maze is watching</b></td><td>The world reacts to where you look. Walls change only behind your back, so looking (or not looking) is part of how you play.</td></tr>
+  <tr><td><b>Readable rules, chaotic results</b></td><td>Each rule is simple and stated on a wall sign. The chaos comes from how the rules combine, not from randomness.</td></tr>
+  <tr><td><b>Small and focused</b></td><td>Two levels that test the idea well, instead of a large game that isn't finished.</td></tr>
+</table>
+
+<h3>Player experience goals</h3>
+<ul>
+  <li><b>Urgency:</b> the player's heart rate goes up the moment they stop.</li>
+  <li><b>Paranoia:</b> players think twice before turning around.</li>
+  <li><b>Mastery:</b> players discover that standing still is also a deliberate way out of a dead end.</li>
+</ul>
+
+<!-- ============================== 2 RULES ============================== -->
+<h2>2. Core rules &amp; controls</h2>
+<div class="rule"><div class="n">1</div><div><b>Hesitation penalty: "DON'T STOP".</b> If your horizontal speed stays below 0.1 m/s for <b>2.0 s</b>, you are teleported to the START point. A red overlay with a countdown fades in from 0.3 s to warn you. The timer only starts after your first step, so waiting at START is safe.</div></div>
+<div class="rule"><div class="n">2</div><div><b>Wall shift: "DON'T LOOK BACK".</b> Purple walls change only after you have <i>seen</i> them (on screen with a clear line of sight) <i>and</i> they are now <i>behind</i> you (more than 110° from where you're looking). One-way <b>gates</b> close after you pass through them. <b>Toggle walls</b> flip open or closed each time.</div></div>
+<div class="rule"><div class="n">3</div><div><b>Dead ends &amp; reset.</b> Dead ends are deliberate traps. If you're boxed in, standing still for 2 s sends you back to START, and <b>every purple wall resets</b> to its starting state, so the level is always solvable.</div></div>
+<div class="rule"><div class="n">★</div><div><b>Win condition.</b> Touch the glowing cyan Finish Portal. Level 1 leads to Level 2, which leads to the Victory screen (press <b>R</b> to play again).</div></div>
+
+<table>
+  <tr><th>Input</th><th>Action</th><th>Input</th><th>Action</th></tr>
+  <tr><td>W A S D / arrows</td><td>Move (smooth acceleration, 6.5 m/s)</td><td>Mouse</td><td>Look (pitch clamped to ±85°)</td></tr>
+  <tr><td>Esc</td><td>Release the mouse cursor</td><td>Left click</td><td>Capture the mouse again</td></tr>
+  <tr><td>R</td><td>Restart (Victory screen only)</td><td></td><td></td></tr>
+</table>
+
+<!-- ============================== 3 CORE LOOP ============================== -->
+<section>
+<h2>3. Core loop</h2>
+<figure><img src="../Diagrams/core_loop.png" alt="Core loop diagram"><figcaption>Figure 1. The core loop. Every path either moves forward (towards the portal) or ends with a reset at START. There is no safe resting state.</figcaption></figure>
+<p>Second to second, the player <b>runs</b> and <b>chooses at junctions</b> under the 2-second pressure. Minute to minute, they <b>learn the maze</b> across resets: each teleport costs time but teaches them the layout and where the traps are. Across the game, Level 1 introduces each rule on its own, and Level 2 combines them all with faster walls.</p>
+
+<!-- ============================== 4 MECHANICS ============================== -->
+<h2>4. Mechanics in detail</h2>
+<h3>4.1 Wall-shift state machine</h3>
+<figure><img src="../Diagrams/wall_state_machine.png" alt="Wall state machine"><figcaption>Figure 2. When a purple wall moves. The "seen" check uses the camera's view frustum <i>and</i> a line-of-sight test, so walls hidden behind other walls never count as seen.</figcaption></figure>
+<table>
+  <tr><th>Wall type</th><th>Starts</th><th>Shifts when…</th><th>Purpose</th></tr>
+  <tr><td><b>One-way gate</b> (cyan arrow on the maps)</td><td>Open</td><td>Seen, the player has walked ≥ 3 m past it in the arrow direction, and it is now behind them. Shifts once only.</td><td>Stops the player retracing their steps and turns wrong choices into dead ends.</td></tr>
+  <tr><td><b>Toggle wall</b> (⇄ on the maps)</td><td>Open</td><td>Seen, then behind the player. Flips every time. Cooldown is 2.0 s in L1 and <b>0.6 s</b> in L2.</td><td>Changes the paths: creates shortcuts or seals off a region.</td></tr>
+</table>
+<p class="muted">Safety rules: a wall never shifts while the player is within 1.5 m of it, so it can't trap them inside the wall. Every wall resets when the player is teleported.</p>
+
+<h3>4.2 Stillness rule tuning</h3>
+<table>
+  <tr><th>Parameter</th><th>Value</th><th>Why</th></tr>
+  <tr><td>Stillness limit</td><td>2.0 s</td><td>Long enough to turn a corner and read a sign. Too short to stop and study the maze.</td></tr>
+  <tr><td>Speed threshold</td><td>0.1 m/s</td><td>Uses the speed the player <i>actually</i> moves at, so pushing into a wall counts as standing still. This is what makes Rule 3 work.</td></tr>
+  <tr><td>Warning overlay</td><td>Fades in from 15%–60% of the limit</td><td>Ignores tiny pauses, then makes the danger obvious.</td></tr>
+</table>
+</section>
+
+<!-- ============================== 5 LEVELS ============================== -->
+<section class="page">
+<h2>5. Level design</h2>
+<p>Both levels use 4 m grid cells. They are written as text layouts in <code>SprintOrShiftLevelBuilder.cs</code>, so designers can edit a maze by typing characters. Both layouts were checked with a breadth-first-search solver: the exit can be reached even when every toggle wall is closed.</p>
+<h3>Level 1: Tutorial ("DON'T STOP. DON'T LOOK BACK.")</h3>
+<figure><img src="../Diagrams/level1_map.png" alt="Level 1 map"><figcaption>Figure 3. Level 1: one serpentine corridor (33-cell route) with 2 one-way gates and 3 signs. No branches, so the player learns each rule without getting lost.</figcaption></figure>
+<p><b>Teaching beats:</b> (1) the first thing the player sees is "DON'T STOP". (2) "DON'T LOOK BACK" is placed just before the first gate, which closes behind them a few seconds later. (3) "KEEP MOVING" is placed before the second gate and the portal.</p>
+</section>
+
+<section class="page">
+<h3>Level 2: High Chaos</h3>
+<figure><img src="../Diagrams/level2_map.png" alt="Level 2 map"><figcaption>Figure 4. Level 2: 17 × 13 cells, 41-cell shortest route, 5 one-way gates, 2 fast toggle walls, 4 dead ends, and a large dead-end region on the left.</figcaption></figure>
+<ul>
+  <li><b>Trick corridor (sign 3, "DEAD END"):</b> leads towards the centre and stops exactly one wall short of the real path (gate <code>^</code> next to it). This teaches players not to trust where a corridor seems to lead.</li>
+  <li><b>Shortcut toggle (next to sign 5, "TRUST NOTHING"):</b> an open shortcut towards the exit that closes once it's behind you. If you leave it, you have to take the long way round.</li>
+  <li><b>Left region:</b> a tempting open area full of dead ends. It's reachable through a toggle wall that can close behind you.</li>
+</ul>
+<div class="grid2">
+  <figure><img src="../Screenshots/07_level2_dead_end_trick.png" alt=""><figcaption>The "DEAD END" trick corridor.</figcaption></figure>
+  <figure><img src="../Screenshots/08_level2_trust_nothing.png" alt=""><figcaption>"TRUST NOTHING", looking down the central spine.</figcaption></figure>
+</div>
+</section>
+
+<!-- ============================== 6 VISUALS ============================== -->
+<section class="page">
+<h2>6. Visual style &amp; feedback</h2>
+<p><b>Dark neon toon.</b> The world is built only from Unity primitive cubes, with flat colours and strong contrast: indigo walls, a near-black floor and dark fog. Anything important <i>glows</i> (bloom): the green START pad, the yellow, red and cyan signs, and the cyan portal. Purple marks the dynamic walls, so attentive players can spot them. A camera flashlight limits how far you can see, which adds to the tension.</p>
+<div class="grid2">
+  <figure><img src="../Screenshots/02_level1_stillness_warning.png" alt=""><figcaption>Stillness warning overlay with countdown (Rule 1 feedback).</figcaption></figure>
+  <figure><img src="../Screenshots/03_level1_dont_look_back_sign.png" alt=""><figcaption>Glowing wall sign teaching Rule 2.</figcaption></figure>
+  <figure><img src="../Screenshots/04_level1_gate_closed_behind.png" alt=""><figcaption>A one-way gate after it has closed behind the player.</figcaption></figure>
+  <figure><img src="../Screenshots/05_level1_finish_portal.png" alt=""><figcaption>The glowing Finish Portal.</figcaption></figure>
+  <figure><img src="../Screenshots/06_level2_start.png" alt=""><figcaption>Level intro message.</figcaption></figure>
+  <figure><img src="../Screenshots/09_victory_screen.png" alt=""><figcaption>Victory screen.</figcaption></figure>
+</div>
+<table>
+  <tr><th>Event</th><th>Feedback the player gets</th></tr>
+  <tr><td>Standing still</td><td>Red full-screen overlay fades in, with "DON'T STOP!" and the seconds left</td></tr>
+  <tr><td>Teleported</td><td>"TOO SLOW! BACK TO START" message, then back at the green START pad</td></tr>
+  <tr><td>Wall shifted</td><td>None at the moment it happens (it's always behind you). You discover it when you turn round. <span class="planned">Planned:</span> a "slam" sound.</td></tr>
+  <tr><td>Level start / complete</td><td>Large centre-screen title, then a fade</td></tr>
+</table>
+</section>
+
+<!-- ============================== 7 MDA ============================== -->
+<section class="page">
+<h2>7. MDA analysis</h2>
+<p>Target aesthetics: <b>Sensation</b> and <b>Challenge</b>, with <b>Fantasy</b> (being hunted by a living maze) as flavour. The table follows three connected chains, each running from a mechanic to a dynamic to an aesthetic.</p>
+<table>
+  <tr><th style="width:5%">#</th><th style="width:32%">Mechanic</th><th style="width:33%">Dynamic</th><th>Aesthetic</th></tr>
+  <tr><td>1</td><td><b>Stillness timer:</b> speed &lt; 0.1 for 2 s means teleport to START. Countdown overlay.</td><td>Players never pause. They make split-second choices at junctions and "wiggle" to buy time, which still costs them.</td><td><b>Urgency, adrenaline</b> (Sensation, Challenge)</td></tr>
+  <tr><td>2</td><td><b>Line-of-sight wall shifting:</b> a wall is armed when seen and shifts once it's more than 110° behind you.</td><td>Players avoid turning round, glance back nervously, and stare at walls to "freeze" them.</td><td><b>Paranoia, dread</b> (Sensation, Fantasy)</td></tr>
+  <tr><td>3</td><td><b>Dead ends + one-way gates + stillness reset</b> (the reset also restores every wall).</td><td>Being trapped becomes a choice: players stand still <i>on purpose</i> to escape.</td><td><b>Tension, then relief</b> (Challenge, Discovery)</td></tr>
+</table>
+<figure><img src="../Diagrams/mda_chains.png" alt="MDA chains"><figcaption>Figure 5. The three MDA chains.</figcaption></figure>
+<h3>How the chains connect</h3>
+<p><b>Chain 1 feeds chain 2:</b> you can't stop to watch your back, so the time pressure is what makes "don't look back" dangerous. <b>Chain 2 feeds chain 3:</b> walls closing behind you create real dead ends. <b>Chain 3 loops back to chain 1:</b> the way out of a trap is the stillness rule itself. One mechanic both punishes and rescues, and players learn to use it both ways.</p>
+<div class="callout warn">The Dynamics column describes the <b>intended</b> behaviour. It will be confirmed by the external playtest (Section 10). Chain 2 has already been revised once after the internal playtest showed that walls felt random rather than tense.</div>
+
+<!-- ============================== 8 PRINCIPLES ============================== -->
+<h2>8. Design principles applied</h2>
+<table>
+  <tr><th style="width:26%">Principle</th><th>Where it appears</th></tr>
+  <tr><td><b>Teach through level design</b></td><td>Level 1 is linear, and each sign sits right before the mechanic it describes. Level 2 only combines rules the player already knows.</td></tr>
+  <tr><td><b>Clear feedback</b></td><td>The stillness overlay has a visible countdown. Teleports always show a message. Every important object glows.</td></tr>
+  <tr><td><b>Signifiers / affordances</b></td><td>Dynamic walls are a different colour (purple) from static walls (indigo). The portal glows, which says "go here".</td></tr>
+  <tr><td><b>Difficulty curve</b></td><td>Level 1 has 2 gates and no branches. Level 2 has 5 gates, 2 toggle walls with a 3× faster cooldown, 4 dead ends and a trick corridor.</td></tr>
+  <tr><td><b>Meaningful choice / risk–reward</b></td><td>The toggle shortcut in Level 2 saves time but can close behind you.</td></tr>
+  <tr><td><b>Fairness &amp; predictability</b></td><td>Walls follow one rule (seen, then behind you) and reset on teleport. The exit is always reachable, which was proven by a solver.</td></tr>
+</table>
+</section>
+
+<!-- ============================== 9 TECH ============================== -->
+<section class="page">
+<h2>9. Technical implementation</h2>
+<p>Unity 6 (6000.4.0f1), Universal Render Pipeline, the new Input System and TextMeshPro. There are three runtime scripts with one-way dependencies: the player and the walls talk to <code>GameManager.Instance</code>.</p>
+<table>
+  <tr><th style="width:26%">Script</th><th>Responsibility</th></tr>
+  <tr><td><code>FirstPersonController</code></td><td>CharacterController movement with smoothed acceleration, smoothed mouse look with pitch clamp, the 2 s stillness timer, <code>TeleportToStart()</code>, and the Finish trigger (built-in <code>Finish</code> tag).</td></tr>
+  <tr><td><code>DynamicMazeWall</code></td><td>Each frame: frustum test + <code>Physics.Linecast</code> line-of-sight check, a "behind" angle test, cooldown and distance guards, then turns the Renderer and Collider on or off together. <code>ResetWall()</code> restores the starting state.</td></tr>
+  <tr><td><code>GameManager</code></td><td>Start Point reference, stillness overlay, centre messages, victory panel, wall reset on teleport, and level transitions (<code>nextSceneName</code>, empty = victory).</td></tr>
+  <tr><td><code>SprintOrShiftLevelBuilder</code> <span class="muted">(editor only)</span></td><td>Builds both scenes from text layouts: walls, gates, toggles, signs, START, portal, player, UI and lighting.</td></tr>
+</table>
+<p><b>Why not <code>OnBecameInvisible()</code>?</b> In the Editor it also counts the Scene-view camera, it stops firing once a wall hides its own Renderer, and it ignores what is in the way. Testing the player camera directly is the same idea, but predictable.</p>
+<p><b>Hierarchy</b> (identical in both levels): <code>Directional Light</code>, <code>Global Volume</code>, <code>GameManager</code>, <code>Environment</code> (Floor, StartPoint), <code>Maze</code> (Walls / DynamicWalls / Signs), <code>Player</code> → <code>PlayerCamera</code> → <code>Flashlight</code>, <code>UI</code> (Crosshair, StillnessOverlay, MessageText, VictoryPanel), <code>FinishPortal</code>.</p>
+
+<!-- ============================== 10 PLAYTEST ============================== -->
+<h2>10. Playtesting &amp; iteration</h2>
+<h3>Round 1: internal playtest (team, in the Editor)</h3>
+<table>
+  <tr><th>Observation</th><th>Change</th></tr>
+  <tr><td>"The pink boxes for the dead ends are always there."</td><td>Debug gizmos were drawn in the Game view. They now draw only when a wall is selected. <span class="done">Fixed</span></td></tr>
+  <tr><td>"Moving the mouse is really slow."</td><td>Sensitivity raised from 0.12 to 0.45 and smoothing from 20 to 30. <span class="done">Fixed</span></td></tr>
+  <tr><td>"The purple walls seem random. Sometimes they're up before I've looked back."</td><td>Added line of sight and a "behind you" angle, and all walls now start open. <span class="done">Fixed</span>. This was the most important change: it moved chain 2 from <i>confusion</i> to <i>paranoia</i>.</td></tr>
+</table>
+<h3>Round 2: automated rule checks</h3>
+<p>Scripted play-mode tests passed for: stillness teleport, gate closes behind the player, walls reset on teleport, walls hidden behind other walls don't count as seen, turning 90° to the side does not trigger a shift, turning fully round does, and the portal loads Level 2. A solver confirmed both mazes can be completed.</p>
+<h3>Round 3: external playtest</h3>
+<div class="callout warn"><b>Not yet conducted.</b> Plan: 3 to 5 new players, controls only, about 10 minutes each. Tally junction pauses, turn-arounds and intentional resets (one per MDA chain), then a 5-question interview. The full script and note sheet are in the Playtesting Notes document.</div>
+</section>
+
+<!-- ============================== 11 SCOPE ============================== -->
+<section>
+<h2>11. Scope: implemented vs. planned</h2>
+<table>
+  <tr><th>Feature</th><th style="width:18%">Status</th></tr>
+  <tr><td>First-person WASD movement + smooth mouse look</td><td class="done">Implemented</td></tr>
+  <tr><td>Rule 1: 2 s stillness teleport + warning overlay</td><td class="done">Implemented</td></tr>
+  <tr><td>Rule 2: line-of-sight wall shifting (gates + toggle walls)</td><td class="done">Implemented</td></tr>
+  <tr><td>Rule 3: dead ends + wall reset on teleport</td><td class="done">Implemented</td></tr>
+  <tr><td>Level 1 (tutorial) and Level 2 (high chaos), portal, transitions, victory screen</td><td class="done">Implemented</td></tr>
+  <tr><td>Glowing signs, bloom, fog, flashlight</td><td class="done">Implemented</td></tr>
+  <tr><td>Playable macOS build</td><td class="done">Implemented</td></tr>
+  <tr><td>Audio: heartbeat during countdown, wall "slam", music</td><td class="planned">Planned</td></tr>
+  <tr><td>Pause menu with mouse-sensitivity slider; main menu</td><td class="planned">Planned</td></tr>
+  <tr><td>Telegraphing when a wall becomes "armed" (flicker / particles)</td><td class="planned">Planned</td></tr>
+  <tr><td>Run timer + best time per level</td><td class="planned">Planned</td></tr>
+  <tr><td>Level 3 (1.5 s stillness limit, mixed wall types)</td><td class="planned">Planned</td></tr>
+  <tr><td>Gamepad support, Windows build</td><td class="planned">Planned</td></tr>
+</table>
+
+<!-- ============================== 12 CREDITS ============================== -->
+<h2>12. Credits &amp; references</h2>
+<ul>
+  <li><b>Unity 6 / URP / Input System / TextMeshPro</b>: Unity Technologies. The Liberation Sans font (TMP Essential Resources) is under the SIL Open Font License 1.1.</li>
+  <li><b>No third-party art or audio.</b> All visuals are Unity primitives with project-made materials. Diagrams were made with Python/matplotlib.</li>
+  <li><b>Code:</b> written for this project with AI assistance from Claude Code (Anthropic). See the Team Contribution Summary.</li>
+  <li><b>Design references:</b> Hunicke, LeBlanc &amp; Zubek (2004), <i>MDA: A Formal Approach to Game Design and Game Research</i>. Inspired by Red Light, Green Light (Statues) and the Weeping Angels from <i>Doctor Who</i>.</li>
+  <li><b>Repository:</b> https://github.com/adel-nabih/SprintOrShift</li>
+</ul>
+</section>
+
+</body>
+</html>
